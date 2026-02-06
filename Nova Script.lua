@@ -10,6 +10,61 @@ local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- [ WEBHOOK & COUNTER CONFIGURATION ] --
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
+local COUNTER_API = "https://api.countapi.xyz/hit/nova_script_v29_executes/visits" 
+
+-- Function to get global execution count
+local function getGlobalExecutions()
+    local count = "Loading..."
+    local success, response = pcall(function()
+        return game:HttpGet(COUNTER_API)
+    end)
+    if success then
+        local data = HttpService:JSONDecode(response)
+        count = tostring(data.value)
+    else
+        count = "N/A" -- If API fails
+    end
+    return count
+end
+
+-- Function to send to Discord
+local function sendWebhook(count)
+    if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
+    
+    local data = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["title"] = "🚀 Nova Script Executed!",
+            ["description"] = "A user has successfully executed the script.",
+            ["color"] = 65535, -- Cyan Color
+            ["fields"] = {
+                {["name"] = "User", ["value"] = Player.Name, ["inline"] = true},
+                {["name"] = "Total Executes", ["value"] = count, ["inline"] = true},
+                {["name"] = "Game ID", ["value"] = tostring(game.PlaceId), ["inline"] = false},
+                {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
+            },
+            ["footer"] = {["text"] = "Nova V2.9 Logger | " .. os.date("%X")}
+        }}
+    }
+    
+    local jsonData = HttpService:JSONEncode(data)
+    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+    
+    if httpRequest then
+        pcall(function()
+            httpRequest({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+    end
+end
+-- [ END CONFIGURATION ] --
+
 local FOLDER_NAME = "Nova Script"
 local FILE_NAME = "Settings.json"
 local FULL_PATH = FOLDER_NAME .. "/" .. FILE_NAME
@@ -1381,6 +1436,16 @@ local function BuildInterface(isReload)
     local runTimeLbl = createInfoLabel(InfoFrame, "⏱️ Uptime", "00:00:00")
     local playerCountLbl = createInfoLabel(InfoFrame, "👥 Players", "0 / 0")
     local userIdLbl = createInfoLabel(InfoFrame, "🆔 User ID", tostring(Player.UserId))
+    local globalExecLbl = createInfoLabel(InfoFrame, "🌍 Global Executes", "Wait...") -- NEW
+    
+    -- [[ EXECUTE COUNTER LOGIC ]] --
+    task.spawn(function()
+        local count = getGlobalExecutions()
+        globalExecLbl.Text = count
+        sendWebhook(count)
+    end)
+    -- [[ END LOGIC ]] --
+
     local gameIdLbl = createInfoLabel(InfoFrame, "🆔 Game ID", tostring(game.GameId))
     local placeIdLbl = createInfoLabel(InfoFrame, "📍 Place ID", tostring(game.PlaceId))
     local jobIdLbl = createInfoLabel(InfoFrame, "🎫 Job ID", "Click to Copy")
