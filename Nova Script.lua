@@ -9,8 +9,7 @@ local HttpService = game:GetService("HttpService")
 local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
-
-local WEBHOOK_URL = "gh secret set Nova_Execute_Counter"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 
 local function getGlobalExecutions()
