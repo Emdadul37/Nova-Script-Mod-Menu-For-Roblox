@@ -9,8 +9,12 @@ local HttpService = game:GetService("HttpService")
 local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
+local EXECUTION_WEBHOOK = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
+local FEEDBACK_WEBHOOK = "https://discord.com/api/webhooks/1469370547526697003/ZjGnB12cJm2AI26Vurpl2LHw01Rbac0-9MbNmvPIaLYbE81ACCkh5wIV9BFBDtBVHToq"
+
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 local FOLDER_NAME = "Nova Script"
 
@@ -65,8 +69,23 @@ local function getUserExecutionCount()
     return count
 end
 
+local function getStoredExecutionCount()
+    local filePath = FOLDER_NAME .. "/UserStats.json"
+    local count = 0
+    if isfile(filePath) then
+        pcall(function()
+            local content = readfile(filePath)
+            local data = HttpService:JSONDecode(content)
+            if data and data.Executes then
+                count = data.Executes
+            end
+        end)
+    end
+    return count
+end
+
 local function sendWebhook(globalCount, userCount)
-    if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
+    if not EXECUTION_WEBHOOK or EXECUTION_WEBHOOK == "" then return end
     
     local GameName = "Unknown Game"
     local success, info = pcall(function()
@@ -85,8 +104,8 @@ local function sendWebhook(globalCount, userCount)
             ["fields"] = {
                 {["name"] = "User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
                 {["name"] = "🆔 User ID", ["value"] = tostring(Player.UserId), ["inline"] = true},
-                {["name"] = "👤 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true}, -- NEW ADDITION
-                {["name"] = "🌍 Global Executes", ["value"] = globalCount, ["inline"] = true},
+                {["name"] = "👤 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true},
+                {["name"] = "🌍 Total Executes", ["value"] = globalCount, ["inline"] = true},
                 {["name"] = "🎮 Game Name", ["value"] = GameName, ["inline"] = false},
                 {["name"] = "🎫 Job ID", ["value"] = "```" .. tostring(game.JobId) .. "```", ["inline"] = false}
             },
@@ -100,7 +119,51 @@ local function sendWebhook(globalCount, userCount)
     if httpRequest then
         pcall(function()
             httpRequest({
-                Url = WEBHOOK_URL,
+                Url = EXECUTION_WEBHOOK,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+    end
+end
+
+local function sendFeedback(msg)
+    if not FEEDBACK_WEBHOOK or FEEDBACK_WEBHOOK == "" then return end
+    
+    local GameName = "Unknown Game"
+    local success, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId)
+    end)
+    if success and info then
+        GameName = info.Name
+    end
+
+    local userCount = getStoredExecutionCount()
+    
+    local data = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["title"] = "💡 Nova Script Feedback / Idea",
+            ["description"] = "A user has submitted feedback.",
+            ["color"] = 16776960, -- Yellow Color
+            ["fields"] = {
+                {["name"] = "👤 User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
+                {["name"] = "🔢 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true},
+                {["name"] = "📝 Message", ["value"] = "```" .. msg .. "```", ["inline"] = false},
+                {["name"] = "🎮 Game Name", ["value"] = GameName, ["inline"] = true},
+            },
+            ["footer"] = {["text"] = "Nova Feedback System | " .. os.date("%X")}
+        }}
+    }
+    
+    local jsonData = HttpService:JSONEncode(data)
+    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+    
+    if httpRequest then
+        pcall(function()
+            httpRequest({
+                Url = FEEDBACK_WEBHOOK,
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = jsonData
@@ -263,7 +326,7 @@ end
 loadSettings()
 
 local Theme = Themes[Settings.CurrentTheme] or Themes.Cyan
-local GUI_NAME = "NOVA_Script_Rel_V3.2_Info"
+local GUI_NAME = "NOVA_Script_Rel_V3.4_Final"
 local NotificationLayout
 
 local function AddStroke(parent, color, thickness)
@@ -826,7 +889,7 @@ local function BuildInterface(isReload)
     SubTitle.Size = UDim2.new(1, 0, 0, 20)
     SubTitle.Position = UDim2.new(0,0,0,35)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "🚀 Ultimate V3.2"
+    SubTitle.Text = "🚀 Ultimate V3.4"
     SubTitle.TextColor3 = Theme.TextSecondary
     SubTitle.Font = Enum.Font.Gotham
     SubTitle.TextSize = 10
@@ -1242,6 +1305,29 @@ local function BuildInterface(isReload)
     Instance.new("UICorner", playerLabel).CornerRadius = UDim.new(0, 6)
     AddStroke(playerLabel, Theme.Outline, 1)
 
+    local mimicEnabled = false
+    local mimicConnection = nil
+
+    local function updateMimic()
+        if mimicConnection then mimicConnection:Disconnect() end
+        if mimicEnabled and selectedPlayer then
+            mimicConnection = selectedPlayer.Chatted:Connect(function(msg)
+                task.wait(0.1)
+                
+                local args = { [1] = msg, [2] = "All" }
+                local events = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                if events and events:FindFirstChild("SayMessageRequest") then
+                    events.SayMessageRequest:FireServer(unpack(args))
+                else
+                     local tcs = game:GetService("TextChatService")
+                     if tcs and tcs:FindFirstChild("TextChannels") and tcs.TextChannels:FindFirstChild("RBXGeneral") then
+                         tcs.TextChannels.RBXGeneral:SendAsync(msg)
+                     end
+                end
+            end)
+        end
+    end
+
     local function updatePlayerList(dropdownFrame)
         dropdownFrame:ClearAllChildren()
         local listLayout = Instance.new("UIListLayout")
@@ -1258,6 +1344,7 @@ local function BuildInterface(isReload)
                     selectedPlayer = p
                     playerLabel.Text = "Selected: " .. p.Name
                     dropdownFrame.Visible = false
+                    updateMimic()
                 end)
             end
         end
@@ -1271,6 +1358,11 @@ local function BuildInterface(isReload)
     dropdownBtn.MouseButton1Click:Connect(function()
         dropdownFrame.Visible = not dropdownFrame.Visible
         if dropdownFrame.Visible then updatePlayerList(dropdownFrame) end
+    end)
+
+    createToggleSwitch(PlayersFrame, "🦜 Chat Mimic", function(state)
+        mimicEnabled = state
+        updateMimic()
     end)
 
     createButton(PlayersFrame, "🌀 Teleport to Player", Theme.Accent, function()
@@ -1483,14 +1575,33 @@ local function BuildInterface(isReload)
     
     task.spawn(function()
         local globalCount = getGlobalExecutions()
-        local userCount = getUserExecutionCount() -- GET LOCAL COUNT
+        local userCount = getUserExecutionCount()
         globalExecLbl.Text = globalCount
-        sendWebhook(globalCount, userCount) -- SEND BOTH COUNTS
+        sendWebhook(globalCount, userCount)
     end)
 
     local gameIdLbl = createInfoLabel(InfoFrame, "🆔 Game ID", tostring(game.GameId))
-    local placeIdLbl = createInfoLabel(InfoFrame, "📍 Place ID", tostring(game.PlaceId))
-    local jobIdLbl = createInfoLabel(InfoFrame, "🎫 Job ID", "Click to Copy")
+    
+    local feedbackLabel = Instance.new("TextLabel")
+    feedbackLabel.Text = "💡 Suggestions / Feedback"
+    feedbackLabel.Size = UDim2.new(0.96, 0, 0, 20)
+    feedbackLabel.BackgroundTransparency = 1
+    feedbackLabel.TextColor3 = Theme.Accent
+    feedbackLabel.Font = Enum.Font.GothamBold
+    feedbackLabel.TextSize = 12
+    feedbackLabel.Parent = SettingsFrame
+
+    local feedbackBox = createTextBox(SettingsFrame, "✍️ Write idea here...", function() end)
+    
+    createButton(SettingsFrame, "📨 Send Feedback", Theme.Green, function()
+        if feedbackBox.Text ~= "" then
+            sendFeedback(feedbackBox.Text)
+            feedbackBox.Text = ""
+            SendNotification("Feedback Sent!", Theme.Green)
+        else
+            SendNotification("Cannot send empty feedback!", Theme.Red)
+        end
+    end)
 
     createButton(InfoFrame, "📋 Copy Job ID", Theme.Accent, function()
         setclipboard(game.JobId)
