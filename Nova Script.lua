@@ -10,11 +10,9 @@ local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- [ WEBHOOK & COUNTER CONFIGURATION ] --
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
-local COUNTER_API = "https://api.countapi.xyz/hit/nova_script_v29_executes/visits" 
+local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_v29_fixed/visits/up" 
 
--- Function to get global execution count
 local function getGlobalExecutions()
     local count = "Loading..."
     local success, response = pcall(function()
@@ -22,14 +20,19 @@ local function getGlobalExecutions()
     end)
     if success then
         local data = HttpService:JSONDecode(response)
-        count = tostring(data.value)
+        if data.count then
+            count = tostring(data.count)
+        elseif data.value then
+            count = tostring(data.value)
+        else
+            count = "Error"
+        end
     else
-        count = "N/A" -- If API fails
+        count = "N/A"
     end
     return count
 end
 
--- Function to send to Discord
 local function sendWebhook(count)
     if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
     
@@ -38,14 +41,14 @@ local function sendWebhook(count)
         ["embeds"] = {{
             ["title"] = "🚀 Nova Script Executed!",
             ["description"] = "A user has successfully executed the script.",
-            ["color"] = 65535, -- Cyan Color
+            ["color"] = 65535,
             ["fields"] = {
                 {["name"] = "User", ["value"] = Player.Name, ["inline"] = true},
                 {["name"] = "Total Executes", ["value"] = count, ["inline"] = true},
                 {["name"] = "Game ID", ["value"] = tostring(game.PlaceId), ["inline"] = false},
                 {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
             },
-            ["footer"] = {["text"] = "Nova V2.9 Logger | " .. os.date("%X")}
+            ["footer"] = {["text"] = "Nova V3.2 Logger | " .. os.date("%X")}
         }}
     }
     
@@ -63,7 +66,6 @@ local function sendWebhook(count)
         end)
     end
 end
--- [ END CONFIGURATION ] --
 
 local FOLDER_NAME = "Nova Script"
 local FILE_NAME = "Settings.json"
@@ -220,7 +222,7 @@ end
 loadSettings()
 
 local Theme = Themes[Settings.CurrentTheme] or Themes.Cyan
-local GUI_NAME = "NOVA_Script_Rel_V2.9_Info"
+local GUI_NAME = "NOVA_Script_Rel_V3.2_Info"
 local NotificationLayout
 
 local function AddStroke(parent, color, thickness)
@@ -642,7 +644,7 @@ local function BuildInterface(isReload)
     Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 14)
     AddStroke(ToggleBtn, Theme.Accent, 2)
 
-    local QuickFlyBtn = Instance.new("TextButton")
+        local QuickFlyBtn = Instance.new("TextButton")
     QuickFlyBtn.Name = "QuickFlyButton"
     QuickFlyBtn.Size = UDim2.new(0, 50, 0, 50)
     QuickFlyBtn.Position = Settings.QuickFlyPos and UDim2.new(Settings.QuickFlyPos.X, Settings.QuickFlyPos.XOff, Settings.QuickFlyPos.Y, Settings.QuickFlyPos.YOff) or UDim2.new(0.01, 0, 0.55, 0)
@@ -783,7 +785,7 @@ local function BuildInterface(isReload)
     SubTitle.Size = UDim2.new(1, 0, 0, 20)
     SubTitle.Position = UDim2.new(0,0,0,35)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "🚀 Ultimate V2.9"
+    SubTitle.Text = "🚀 Ultimate V3.2"
     SubTitle.TextColor3 = Theme.TextSecondary
     SubTitle.Font = Enum.Font.Gotham
     SubTitle.TextSize = 10
@@ -1436,15 +1438,13 @@ local function BuildInterface(isReload)
     local runTimeLbl = createInfoLabel(InfoFrame, "⏱️ Uptime", "00:00:00")
     local playerCountLbl = createInfoLabel(InfoFrame, "👥 Players", "0 / 0")
     local userIdLbl = createInfoLabel(InfoFrame, "🆔 User ID", tostring(Player.UserId))
-    local globalExecLbl = createInfoLabel(InfoFrame, "🌍 Global Executes", "Wait...") -- NEW
+    local globalExecLbl = createInfoLabel(InfoFrame, "🌍 Global Executes", "Wait...") 
     
-    -- [[ EXECUTE COUNTER LOGIC ]] --
     task.spawn(function()
         local count = getGlobalExecutions()
         globalExecLbl.Text = count
         sendWebhook(count)
     end)
-    -- [[ END LOGIC ]] --
 
     local gameIdLbl = createInfoLabel(InfoFrame, "🆔 Game ID", tostring(game.GameId))
     local placeIdLbl = createInfoLabel(InfoFrame, "📍 Place ID", tostring(game.PlaceId))
