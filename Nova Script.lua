@@ -11,7 +11,7 @@ local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local WEBHOOK_URL = "gh secret set Nova_Execute_Counter"
-local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_v29_fixed/visits/up" 
+local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 
 local function getGlobalExecutions()
     local count = "Loading..."
