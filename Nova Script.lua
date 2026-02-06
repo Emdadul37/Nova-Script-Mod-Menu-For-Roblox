@@ -55,7 +55,7 @@ local function sendWebhook(count)
                 {["name"] = "Game Name", ["value"] = GameName, ["inline"] = false},
                 {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
             },
-            ["footer"] = {["text"] = "Nova V2.9 Logger | " .. os.date("%X")}
+            ["footer"] = {["text"] = "Nova Logger | " .. os.date("%X")}
         }}
     }
     
