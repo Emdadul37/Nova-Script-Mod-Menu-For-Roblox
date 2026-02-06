@@ -35,6 +35,14 @@ end
 local function sendWebhook(count)
     if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
     
+    local GameName = "Unknown Game"
+    local success, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId)
+    end)
+    if success and info then
+        GameName = info.Name
+    end
+    
     local data = {
         ["content"] = "",
         ["embeds"] = {{
@@ -44,10 +52,10 @@ local function sendWebhook(count)
             ["fields"] = {
                 {["name"] = "User", ["value"] = Player.Name, ["inline"] = true},
                 {["name"] = "Total Executes", ["value"] = count, ["inline"] = true},
-                {["name"] = "Game ID", ["value"] = tostring(game.PlaceId), ["inline"] = false},
+                {["name"] = "Game Name", ["value"] = GameName, ["inline"] = false}, -- এখানে Game ID এর বদলে Game Name দেওয়া হয়েছে
                 {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
             },
-            ["footer"] = {["text"] = "Nova V3.2 Logger | " .. os.date("%X")}
+            ["footer"] = {["text"] = "Nova V2.9 Logger | " .. os.date("%X")}
         }}
     }
     
