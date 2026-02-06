@@ -52,7 +52,7 @@ local function sendWebhook(count)
             ["fields"] = {
                 {["name"] = "User", ["value"] = Player.Name, ["inline"] = true},
                 {["name"] = "Total Executes", ["value"] = count, ["inline"] = true},
-                {["name"] = "Game Name", ["value"] = GameName, ["inline"] = false}, -- এখানে Game ID এর বদলে Game Name দেওয়া হয়েছে
+                {["name"] = "Game Name", ["value"] = GameName, ["inline"] = false},
                 {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
             },
             ["footer"] = {["text"] = "Nova V2.9 Logger | " .. os.date("%X")}
