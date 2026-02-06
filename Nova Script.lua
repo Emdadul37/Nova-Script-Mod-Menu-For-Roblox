@@ -9,9 +9,13 @@ local HttpService = game:GetService("HttpService")
 local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
+
+-- [ CONFIGURATION ] --
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
+local FOLDER_NAME = "Nova Script"
 
+-- [ GLOBAL COUNTER ] --
 local function getGlobalExecutions()
     local count = "Loading..."
     local success, response = pcall(function()
@@ -32,7 +36,43 @@ local function getGlobalExecutions()
     return count
 end
 
-local function sendWebhook(count)
+-- [ USER LOCAL COUNTER ] --
+local function getUserExecutionCount()
+    local filePath = FOLDER_NAME .. "/UserStats.json"
+    local count = 0
+    
+    -- ফোল্ডার আছে কিনা চেক করা, না থাকলে বানানো
+    if not isfolder(FOLDER_NAME) then
+        makefolder(FOLDER_NAME)
+    end
+
+    -- আগের ডাটা রিড করা
+    if isfile(filePath) then
+        pcall(function()
+            local content = readfile(filePath)
+            local data = HttpService:JSONDecode(content)
+            if data and data.Executes then
+                count = data.Executes
+            end
+        end)
+    end
+
+    -- কাউন্ট ১ বাড়ানো এবং সেভ করা
+    count = count + 1
+    
+    pcall(function()
+        local newData = {
+            ["Executes"] = count,
+            ["LastExecute"] = tostring(os.date("%x %X"))
+        }
+        writefile(filePath, HttpService:JSONEncode(newData))
+    end)
+    
+    return count
+end
+
+-- [ WEBHOOK SENDER ] --
+local function sendWebhook(globalCount, userCount)
     if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
     
     local GameName = "Unknown Game"
@@ -50,10 +90,12 @@ local function sendWebhook(count)
             ["description"] = "A user has successfully executed the script.",
             ["color"] = 65535,
             ["fields"] = {
-                {["name"] = "User", ["value"] = Player.Name, ["inline"] = true},
-                {["name"] = "Total Executes", ["value"] = count, ["inline"] = true},
-                {["name"] = "Game Name", ["value"] = GameName, ["inline"] = false},
-                {["name"] = "Job ID", ["value"] = tostring(game.JobId), ["inline"] = false}
+                {["name"] = "User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
+                {["name"] = "🆔 User ID", ["value"] = tostring(Player.UserId), ["inline"] = true},
+                {["name"] = "👤 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true}, -- NEW ADDITION
+                {["name"] = "🌍 Global Executes", ["value"] = globalCount, ["inline"] = true},
+                {["name"] = "🎮 Game Name", ["value"] = GameName, ["inline"] = false},
+                {["name"] = "🎫 Job ID", ["value"] = "```" .. tostring(game.JobId) .. "```", ["inline"] = false}
             },
             ["footer"] = {["text"] = "Nova Logger | " .. os.date("%X")}
         }}
@@ -74,7 +116,6 @@ local function sendWebhook(count)
     end
 end
 
-local FOLDER_NAME = "Nova Script"
 local FILE_NAME = "Settings.json"
 local FULL_PATH = FOLDER_NAME .. "/" .. FILE_NAME
 
@@ -693,7 +734,7 @@ local function BuildInterface(isReload)
         end
     end))
 
-    local BlackScreen = Instance.new("TextButton")
+        local BlackScreen = Instance.new("TextButton")
     BlackScreen.Name = "BlackScreenFrame"
     BlackScreen.Size = UDim2.new(1, 0, 1, 0)
     BlackScreen.BackgroundColor3 = Color3.new(0, 0, 0) 
@@ -1448,9 +1489,10 @@ local function BuildInterface(isReload)
     local globalExecLbl = createInfoLabel(InfoFrame, "🌍 Global Executes", "Wait...") 
     
     task.spawn(function()
-        local count = getGlobalExecutions()
-        globalExecLbl.Text = count
-        sendWebhook(count)
+        local globalCount = getGlobalExecutions()
+        local userCount = getUserExecutionCount() -- GET LOCAL COUNT
+        globalExecLbl.Text = globalCount
+        sendWebhook(globalCount, userCount) -- SEND BOTH COUNTS
     end)
 
     local gameIdLbl = createInfoLabel(InfoFrame, "🆔 Game ID", tostring(game.GameId))
