@@ -10,12 +10,10 @@ local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- [ CONFIGURATION ] --
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 local FOLDER_NAME = "Nova Script"
 
--- [ GLOBAL COUNTER ] --
 local function getGlobalExecutions()
     local count = "Loading..."
     local success, response = pcall(function()
@@ -36,17 +34,14 @@ local function getGlobalExecutions()
     return count
 end
 
--- [ USER LOCAL COUNTER ] --
 local function getUserExecutionCount()
     local filePath = FOLDER_NAME .. "/UserStats.json"
     local count = 0
     
-    -- ফোল্ডার আছে কিনা চেক করা, না থাকলে বানানো
     if not isfolder(FOLDER_NAME) then
         makefolder(FOLDER_NAME)
     end
 
-    -- আগের ডাটা রিড করা
     if isfile(filePath) then
         pcall(function()
             local content = readfile(filePath)
@@ -57,7 +52,6 @@ local function getUserExecutionCount()
         end)
     end
 
-    -- কাউন্ট ১ বাড়ানো এবং সেভ করা
     count = count + 1
     
     pcall(function()
@@ -71,7 +65,6 @@ local function getUserExecutionCount()
     return count
 end
 
--- [ WEBHOOK SENDER ] --
 local function sendWebhook(globalCount, userCount)
     if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
     
