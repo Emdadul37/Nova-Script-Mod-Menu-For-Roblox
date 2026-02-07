@@ -11,6 +11,8 @@ local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
+local PathfindingService = game:GetService("PathfindingService")
+
 local W1 = "https://discord.com/api/webhooks/"
 local W2 = "1469230266085277795/"
 local W3 = "e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
@@ -21,6 +23,7 @@ local EXECUTION_WEBHOOK = W1 .. W2 .. W3
 local FEEDBACK_WEBHOOK = F1 .. F2 .. F3
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 local FOLDER_NAME = "Nova Script"
+local POSITIONS_FILE = FOLDER_NAME .. "/Positions.json"
 
 local function getExecutorName()
     if identifyexecutor then
@@ -229,6 +232,7 @@ if _G.OriginalFogStart == nil then _G.OriginalFogStart = Lighting.FogStart end
 if _G.OriginalFogEnd == nil then _G.OriginalFogEnd = Lighting.FogEnd end
 
 local Settings = {}
+local PositionsData = {}
 
 Settings.MenuKey = "RightControl"
 Settings.FlightSpeed = 3
@@ -432,7 +436,25 @@ local function loadSettings()
     end)
 end
 
+local function savePositions()
+    pcall(function()
+        if not isfolder(FOLDER_NAME) then makefolder(FOLDER_NAME) end
+        writefile(POSITIONS_FILE, HttpService:JSONEncode(PositionsData))
+    end)
+end
+
+local function loadPositions()
+    pcall(function()
+        if isfile(POSITIONS_FILE) then
+            PositionsData = HttpService:JSONDecode(readfile(POSITIONS_FILE))
+        else
+            PositionsData = {}
+        end
+    end)
+end
+
 loadSettings()
+loadPositions()
 
 local Theme = Themes[Settings.CurrentTheme] or Themes.Cyan
 local GUI_NAME = "NOVA_Script_Rel_V3.5_Final"
@@ -809,7 +831,7 @@ local function Cleanup()
         end
     end)
 
-        for _, conn in ipairs(Connections) do
+    for _, conn in ipairs(Connections) do
         if conn and conn.Connected then conn:Disconnect() end
     end
     table.clear(Connections)
@@ -857,7 +879,7 @@ local function BuildInterface(isReload)
     Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 14)
     AddStroke(ToggleBtn, Theme.Accent, 2)
 
-        local QuickFlyBtn = Instance.new("TextButton")
+    local QuickFlyBtn = Instance.new("TextButton")
     QuickFlyBtn.Name = "QuickFlyButton"
     QuickFlyBtn.Size = UDim2.new(0, 50, 0, 50)
     QuickFlyBtn.Position = Settings.QuickFlyPos and UDim2.new(Settings.QuickFlyPos.X, Settings.QuickFlyPos.XOff, Settings.QuickFlyPos.Y, Settings.QuickFlyPos.YOff) or UDim2.new(0.01, 0, 0.55, 0)
@@ -893,7 +915,7 @@ local function BuildInterface(isReload)
         Settings.QuickNoclipPos = {X = QuickNoclipBtn.Position.X.Scale, XOff = QuickNoclipBtn.Position.X.Offset, Y = QuickNoclipBtn.Position.Y.Scale, YOff = QuickNoclipBtn.Position.Y.Offset}
         saveSettings()
     end
-    AddConnection(UserInputService.InputEnded:Connect(function(input)
+        AddConnection(UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             saveBtnPos()
         end
@@ -1046,6 +1068,7 @@ local function BuildInterface(isReload)
     local MovementFrame = CreatePage("Movement")
     local VisualsFrame = CreatePage("Visuals")
     local PlayersFrame = CreatePage("Players")
+    local PositionsFrame = CreatePage("Positions")
     local AFKFrame = CreatePage("AFK")
     local ServerFrame = CreatePage("Server")
     local ChangelogFrame = CreatePage("Changelog")
@@ -1099,6 +1122,7 @@ local function BuildInterface(isReload)
     local Tab2 = CreateTabButton("🏃 Move", MovementFrame)
     local Tab3 = CreateTabButton("👁️ Visuals", VisualsFrame)
     local Tab4 = CreateTabButton("👥 Players", PlayersFrame)
+    local Tab9 = CreateTabButton("📍 Positions", PositionsFrame)
     local Tab5 = CreateTabButton("💤 AFK", AFKFrame)
     local Tab6 = CreateTabButton("🌍 Server", ServerFrame)
     local Tab7 = CreateTabButton("ℹ️ Info", InfoFrame)
@@ -1132,6 +1156,7 @@ local function BuildInterface(isReload)
     addChangeLogItem("3. Updated/Fixed Fly And Noclip System")
     addChangeLogItem("4. Added More Theme (In Config Tab)")
     addChangeLogItem("5. Added Chat Mimic (In Players Tab)")
+    addChangeLogItem("6. Added Positions/Waypoints System (In Position Tab)")
 
     local flyEnabled = false
     local flySpeed = Settings.FlightSpeed or 3
@@ -1330,6 +1355,139 @@ local function BuildInterface(isReload)
             Player.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
         end
     end))
+
+    local selectedPos = nil
+    local posNameBox = createTextBox(PositionsFrame, "Position Name...", function() end)
+    local posLabel = Instance.new("TextLabel")
+    posLabel.Text = "Selected: None"
+    posLabel.Size = UDim2.new(0.96, 0, 0, 30)
+    posLabel.BackgroundColor3 = Theme.ContentBg
+    posLabel.TextColor3 = Theme.Accent
+    posLabel.Parent = PositionsFrame
+    Instance.new("UICorner", posLabel).CornerRadius = UDim.new(0, 6)
+    AddStroke(posLabel, Theme.Outline, 1)
+
+    local function getGamePositions()
+        local gid = tostring(game.PlaceId)
+        if not PositionsData[gid] then PositionsData[gid] = {} end
+        return PositionsData[gid]
+    end
+
+    local posDropdownFrame = Instance.new("ScrollingFrame")
+    posDropdownFrame.Size = UDim2.new(0.96, 0, 0, 150)
+    posDropdownFrame.Visible = false
+    posDropdownFrame.Parent = PositionsFrame
+    createLayout(posDropdownFrame)
+
+    local function refreshPositionList()
+        posDropdownFrame:ClearAllChildren()
+        createLayout(posDropdownFrame)
+        local positions = getGamePositions()
+        for i, pos in ipairs(positions) do
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 25)
+            btn.Text = pos.Name
+            btn.BackgroundColor3 = Theme.ItemHover
+            btn.TextColor3 = Theme.TextPrimary
+            btn.Parent = posDropdownFrame
+            btn.MouseButton1Click:Connect(function()
+                selectedPos = pos
+                posLabel.Text = "Selected: " .. pos.Name
+                posDropdownFrame.Visible = false
+            end)
+        end
+    end
+
+    createButton(PositionsFrame, "💾 Save Current Position", Theme.Green, function()
+        if posNameBox.Text ~= "" then
+            local char = Player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local positions = getGamePositions()
+                local newPos = {
+                    Name = posNameBox.Text,
+                    X = root.Position.X,
+                    Y = root.Position.Y,
+                    Z = root.Position.Z
+                }
+                table.insert(positions, newPos)
+                PositionsData[tostring(game.PlaceId)] = positions
+                savePositions()
+                posNameBox.Text = ""
+                refreshPositionList()
+                SendNotification("Position Saved!", Theme.Green)
+            end
+        else
+            SendNotification("Enter a name first!", Theme.Red)
+        end
+    end)
+
+    local posDropdownBtn = createButton(PositionsFrame, "👇 Select Position", Theme.Outline, function() 
+        refreshPositionList()
+        posDropdownFrame.Visible = not posDropdownFrame.Visible
+    end)
+
+    createButton(PositionsFrame, "🌀 Teleport to Position", Theme.Accent, function()
+        if selectedPos and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            Player.Character:SetPrimaryPartCFrame(CFrame.new(selectedPos.X, selectedPos.Y, selectedPos.Z))
+        else
+            SendNotification("Select a position first!", Theme.Red)
+        end
+    end)
+
+    createButton(PositionsFrame, "🦅 Tween to Position", Theme.Yellow, function()
+        if selectedPos and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local root = Player.Character.HumanoidRootPart
+            local targetCFrame = CFrame.new(selectedPos.X, selectedPos.Y, selectedPos.Z)
+            local dist = (root.Position - targetCFrame.Position).Magnitude
+            local speed = Settings.FlightSpeed * 50 
+            local time = dist / speed
+            
+            local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+            local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
+            
+            local oldGrav = workspace.Gravity
+            workspace.Gravity = 0
+            
+            tween:Play()
+            tween.Completed:Connect(function()
+                workspace.Gravity = oldGrav
+            end)
+        else
+            SendNotification("Select a position first!", Theme.Red)
+        end
+    end)
+
+    createButton(PositionsFrame, "🚶 Walk to Position", Theme.Purple, function()
+        if selectedPos and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+            local hum = Player.Character.Humanoid
+            local targetPos = Vector3.new(selectedPos.X, selectedPos.Y, selectedPos.Z)
+
+            hum:MoveTo(targetPos)
+        else
+            SendNotification("Select a position first!", Theme.Red)
+        end
+    end)
+
+    createButton(PositionsFrame, "🗑️ Delete Position", Theme.Red, function()
+        if selectedPos then
+            local positions = getGamePositions()
+            for i, pos in ipairs(positions) do
+                if pos == selectedPos then
+                    table.remove(positions, i)
+                    break
+                end
+            end
+            PositionsData[tostring(game.PlaceId)] = positions
+            savePositions()
+            selectedPos = nil
+            posLabel.Text = "Selected: None"
+            refreshPositionList()
+            SendNotification("Position Deleted!", Theme.Red)
+        else
+            SendNotification("Select a position first!", Theme.Red)
+        end
+    end)
 
     local espEnabled = false
     local function createESP(player)
