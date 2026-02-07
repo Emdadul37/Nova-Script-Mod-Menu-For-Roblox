@@ -150,7 +150,7 @@ local function sendFeedback(msg)
         ["embeds"] = {{
             ["title"] = "💡 Nova Script Feedback / Idea",
             ["description"] = "A user has submitted feedback.",
-            ["color"] = 16776960, -- Yellow Color
+            ["color"] = 16776960,
             ["fields"] = {
                 {["name"] = "👤 User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
                 {["name"] = "🔢 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true},
@@ -302,6 +302,84 @@ local Themes = {
         Red = Color3.fromRGB(255, 75, 75),
         Green = Color3.fromRGB(75, 255, 120),
         Yellow = Color3.fromRGB(255, 200, 50)
+    },
+    Gold = {
+        MainBg = Color3.fromRGB(25, 25, 25),
+        SidebarBg = Color3.fromRGB(30, 30, 30),
+        ContentBg = Color3.fromRGB(35, 35, 35),
+        Accent = Color3.fromRGB(255, 215, 0),
+        TextPrimary = Color3.fromRGB(255, 255, 240),
+        TextSecondary = Color3.fromRGB(189, 183, 107),
+        Outline = Color3.fromRGB(70, 65, 50),
+        ItemHover = Color3.fromRGB(50, 50, 40),
+        Red = Color3.fromRGB(255, 80, 80),
+        Green = Color3.fromRGB(80, 255, 80),
+        Yellow = Color3.fromRGB(255, 215, 0)
+    },
+    Toxic = {
+        MainBg = Color3.fromRGB(10, 15, 10),
+        SidebarBg = Color3.fromRGB(15, 20, 15),
+        ContentBg = Color3.fromRGB(20, 25, 20),
+        Accent = Color3.fromRGB(124, 252, 0),
+        TextPrimary = Color3.fromRGB(200, 255, 200),
+        TextSecondary = Color3.fromRGB(100, 150, 100),
+        Outline = Color3.fromRGB(30, 50, 30),
+        ItemHover = Color3.fromRGB(25, 35, 25),
+        Red = Color3.fromRGB(255, 50, 50),
+        Green = Color3.fromRGB(50, 255, 50),
+        Yellow = Color3.fromRGB(255, 255, 50)
+    },
+    CottonCandy = {
+        MainBg = Color3.fromRGB(255, 240, 245),
+        SidebarBg = Color3.fromRGB(255, 228, 225),
+        ContentBg = Color3.fromRGB(240, 248, 255),
+        Accent = Color3.fromRGB(255, 105, 180),
+        TextPrimary = Color3.fromRGB(70, 70, 90),
+        TextSecondary = Color3.fromRGB(100, 100, 120),
+        Outline = Color3.fromRGB(200, 200, 220),
+        ItemHover = Color3.fromRGB(230, 230, 250),
+        Red = Color3.fromRGB(255, 100, 100),
+        Green = Color3.fromRGB(100, 200, 100),
+        Yellow = Color3.fromRGB(255, 200, 100)
+    },
+    Ocean = {
+        MainBg = Color3.fromRGB(10, 25, 40),
+        SidebarBg = Color3.fromRGB(15, 35, 55),
+        ContentBg = Color3.fromRGB(20, 45, 70),
+        Accent = Color3.fromRGB(0, 190, 255),
+        TextPrimary = Color3.fromRGB(220, 240, 255),
+        TextSecondary = Color3.fromRGB(100, 140, 170),
+        Outline = Color3.fromRGB(30, 60, 90),
+        ItemHover = Color3.fromRGB(25, 55, 85),
+        Red = Color3.fromRGB(255, 80, 80),
+        Green = Color3.fromRGB(80, 255, 150),
+        Yellow = Color3.fromRGB(255, 220, 80)
+    },
+    Vaporwave = {
+        MainBg = Color3.fromRGB(20, 10, 30),
+        SidebarBg = Color3.fromRGB(30, 15, 40),
+        ContentBg = Color3.fromRGB(40, 20, 50),
+        Accent = Color3.fromRGB(255, 0, 255),
+        TextPrimary = Color3.fromRGB(0, 255, 255),
+        TextSecondary = Color3.fromRGB(255, 150, 255),
+        Outline = Color3.fromRGB(60, 30, 80),
+        ItemHover = Color3.fromRGB(50, 25, 60),
+        Red = Color3.fromRGB(255, 50, 100),
+        Green = Color3.fromRGB(50, 255, 150),
+        Yellow = Color3.fromRGB(255, 255, 100)
+    },
+    Dracula = {
+        MainBg = Color3.fromRGB(40, 42, 54),
+        SidebarBg = Color3.fromRGB(68, 71, 90),
+        ContentBg = Color3.fromRGB(56, 58, 89),
+        Accent = Color3.fromRGB(255, 121, 198),
+        TextPrimary = Color3.fromRGB(248, 248, 242),
+        TextSecondary = Color3.fromRGB(98, 114, 164),
+        Outline = Color3.fromRGB(98, 114, 164),
+        ItemHover = Color3.fromRGB(80, 80, 100),
+        Red = Color3.fromRGB(255, 85, 85),
+        Green = Color3.fromRGB(80, 250, 123),
+        Yellow = Color3.fromRGB(241, 250, 140)
     }
 }
 
@@ -330,7 +408,7 @@ end
 loadSettings()
 
 local Theme = Themes[Settings.CurrentTheme] or Themes.Cyan
-local GUI_NAME = "NOVA_Script_Rel_V3.4_Final"
+local GUI_NAME = "NOVA_Script_Rel_V3.5_Final"
 local NotificationLayout
 
 local function AddStroke(parent, color, thickness)
@@ -794,7 +872,7 @@ local function BuildInterface(isReload)
         end
     end))
 
-    local BlackScreen = Instance.new("TextButton")
+        local BlackScreen = Instance.new("TextButton")
     BlackScreen.Name = "BlackScreenFrame"
     BlackScreen.Size = UDim2.new(1, 0, 1, 0)
     BlackScreen.BackgroundColor3 = Color3.new(0, 0, 0) 
@@ -847,7 +925,7 @@ local function BuildInterface(isReload)
         MainFrame.Visible = false
     end)
 
-        local SideBar = Instance.new("Frame")
+    local SideBar = Instance.new("Frame")
     SideBar.Size = UDim2.new(0.25, 0, 1, 0)
     SideBar.BackgroundColor3 = Theme.SidebarBg
     SideBar.Parent = MainFrame
@@ -893,7 +971,7 @@ local function BuildInterface(isReload)
     SubTitle.Size = UDim2.new(1, 0, 0, 20)
     SubTitle.Position = UDim2.new(0,0,0,35)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "🚀 Ultimate V3.4"
+    SubTitle.Text = "🚀 Ultimate V3.5"
     SubTitle.TextColor3 = Theme.TextSecondary
     SubTitle.Font = Enum.Font.Gotham
     SubTitle.TextSize = 10
@@ -943,6 +1021,7 @@ local function BuildInterface(isReload)
     local PlayersFrame = CreatePage("Players")
     local AFKFrame = CreatePage("AFK")
     local ServerFrame = CreatePage("Server")
+    local ChangelogFrame = CreatePage("Changelog")
     local InfoFrame = CreatePage("Info")
     local SettingsFrame = CreatePage("Settings")
 
@@ -989,15 +1068,43 @@ local function BuildInterface(isReload)
         return btn
     end
 
-    local Tab1 = CreateTabButton("🏃 Move", MovementFrame)
-    local Tab2 = CreateTabButton("👁️ Visuals", VisualsFrame)
-    local Tab3 = CreateTabButton("👥 Players", PlayersFrame)
-    local Tab4 = CreateTabButton("💤 AFK", AFKFrame)
-    local Tab5 = CreateTabButton("🌍 Server", ServerFrame)
-    local Tab6 = CreateTabButton("ℹ️ Info", InfoFrame)
-    local Tab7 = CreateTabButton("⚙️ Config", SettingsFrame)
+    local Tab1 = CreateTabButton("📜 Changelog", ChangelogFrame)
+    local Tab2 = CreateTabButton("🏃 Move", MovementFrame)
+    local Tab3 = CreateTabButton("👁️ Visuals", VisualsFrame)
+    local Tab4 = CreateTabButton("👥 Players", PlayersFrame)
+    local Tab5 = CreateTabButton("💤 AFK", AFKFrame)
+    local Tab6 = CreateTabButton("🌍 Server", ServerFrame)
+    local Tab7 = CreateTabButton("ℹ️ Info", InfoFrame)
+    local Tab8 = CreateTabButton("⚙️ Config", SettingsFrame)
 
-    SwitchTab(Tab1, MovementFrame)
+    SwitchTab(Tab1, ChangelogFrame)
+
+    local function addChangeLogItem(text)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.96, 0, 0, 30)
+        label.BackgroundTransparency = 1
+        label.Text = "• " .. text
+        label.TextColor3 = Theme.TextPrimary
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Font = Enum.Font.GothamMedium
+        label.TextSize = 13
+        label.Parent = ChangelogFrame
+    end
+    
+    local clTitle = Instance.new("TextLabel")
+    clTitle.Text = "Latest Changes"
+    clTitle.Size = UDim2.new(0.96, 0, 0, 30)
+    clTitle.BackgroundTransparency = 1
+    clTitle.TextColor3 = Theme.Accent
+    clTitle.Font = Enum.Font.GothamBold
+    clTitle.TextSize = 16
+    clTitle.Parent = ChangelogFrame
+
+    addChangeLogItem("1. Added Global Executes (In Info Tab)")
+    addChangeLogItem("2. Added Send FeedBack System (In Config Tab)")
+    addChangeLogItem("3. Updated/Fixed Fly And Noclip System")
+    addChangeLogItem("4. Added More Theme (In Config Tab)")
+    addChangeLogItem("5. Added Chat Mimic (In Players Tab)")
 
     local flyEnabled = false
     local flySpeed = Settings.FlightSpeed or 3
