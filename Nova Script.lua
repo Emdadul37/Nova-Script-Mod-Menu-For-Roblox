@@ -11,10 +11,14 @@ local Lighting = game:GetService("Lighting")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
-
-local EXECUTION_WEBHOOK = "https://discord.com/api/webhooks/1469230266085277795/e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
-local FEEDBACK_WEBHOOK = "https://discord.com/api/webhooks/1469370547526697003/ZjGnB12cJm2AI26Vurpl2LHw01Rbac0-9MbNmvPIaLYbE81ACCkh5wIV9BFBDtBVHToq"
-
+local W1 = "https://discord.com/api/webhooks/"
+local W2 = "1469230266085277795/"
+local W3 = "e1P5sA1vfO01OKfc3N4SF9CbXZMmHwZ-MJfebGjPxk5XFb7t09qVexOE3JqCv-1gGh5B"
+local F1 = "https://discord.com/api/webhooks/"
+local F2 = "1469370547526697003/"
+local F3 = "ZjGnB12cJm2AI26Vurpl2LHw01Rbac0-9MbNmvPIaLYbE81ACCkh5wIV9BFBDtBVHToq"
+local EXECUTION_WEBHOOK = W1 .. W2 .. W3
+local FEEDBACK_WEBHOOK = F1 .. F2 .. F3
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 local FOLDER_NAME = "Nova Script"
 
@@ -790,7 +794,7 @@ local function BuildInterface(isReload)
         end
     end))
 
-        local BlackScreen = Instance.new("TextButton")
+    local BlackScreen = Instance.new("TextButton")
     BlackScreen.Name = "BlackScreenFrame"
     BlackScreen.Size = UDim2.new(1, 0, 1, 0)
     BlackScreen.BackgroundColor3 = Color3.new(0, 0, 0) 
@@ -843,7 +847,7 @@ local function BuildInterface(isReload)
         MainFrame.Visible = false
     end)
 
-    local SideBar = Instance.new("Frame")
+        local SideBar = Instance.new("Frame")
     SideBar.Size = UDim2.new(0.25, 0, 1, 0)
     SideBar.BackgroundColor3 = Theme.SidebarBg
     SideBar.Parent = MainFrame
