@@ -22,6 +22,28 @@ local FEEDBACK_WEBHOOK = F1 .. F2 .. F3
 local COUNTER_API = "https://api.counterapi.dev/v1/nova_script_execute_counter/visits/up" 
 local FOLDER_NAME = "Nova Script"
 
+local function getExecutorName()
+    if identifyexecutor then
+        return identifyexecutor()
+    elseif getexecutorname then
+        return getexecutorname()
+    elseif syn then
+        return "Synapse X"
+    elseif secure_load then
+        return "Sentinel"
+    elseif is_sirhurt_closure then
+        return "Sirhurt"
+    elseif pebc_execute then
+        return "ProtoSmasher"
+    elseif KRNL_LOADED then
+        return "KRNL"
+    elseif fluxus then
+        return "Fluxus"
+    else
+        return "Unknown Executor"
+    end
+end
+
 local function getGlobalExecutions()
     local count = "Loading..."
     local success, response = pcall(function()
@@ -99,6 +121,8 @@ local function sendWebhook(globalCount, userCount)
         GameName = info.Name
     end
     
+    local executorName = getExecutorName()
+
     local data = {
         ["content"] = "",
         ["embeds"] = {{
@@ -108,6 +132,7 @@ local function sendWebhook(globalCount, userCount)
             ["fields"] = {
                 {["name"] = "User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
                 {["name"] = "🆔 User ID", ["value"] = tostring(Player.UserId), ["inline"] = true},
+                {["name"] = "💻 Executor", ["value"] = "**" .. executorName .. "**", ["inline"] = true},
                 {["name"] = "👤 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true},
                 {["name"] = "🌍 Total Executes", ["value"] = globalCount, ["inline"] = true},
                 {["name"] = "🎮 Game Name", ["value"] = GameName, ["inline"] = false},
@@ -144,7 +169,8 @@ local function sendFeedback(msg)
     end
 
     local userCount = getStoredExecutionCount()
-    
+    local executorName = getExecutorName()
+
     local data = {
         ["content"] = "",
         ["embeds"] = {{
@@ -153,6 +179,7 @@ local function sendFeedback(msg)
             ["color"] = 16776960,
             ["fields"] = {
                 {["name"] = "👤 User", ["value"] = Player.Name .. " ("..Player.DisplayName..")", ["inline"] = true},
+                {["name"] = "💻 Executor", ["value"] = executorName, ["inline"] = true},
                 {["name"] = "🔢 User Executes", ["value"] = "**" .. tostring(userCount) .. " times**", ["inline"] = true},
                 {["name"] = "📝 Message", ["value"] = "```" .. msg .. "```", ["inline"] = false},
                 {["name"] = "🎮 Game Name", ["value"] = GameName, ["inline"] = true},
@@ -782,7 +809,7 @@ local function Cleanup()
         end
     end)
 
-    for _, conn in ipairs(Connections) do
+        for _, conn in ipairs(Connections) do
         if conn and conn.Connected then conn:Disconnect() end
     end
     table.clear(Connections)
@@ -872,7 +899,7 @@ local function BuildInterface(isReload)
         end
     end))
 
-        local BlackScreen = Instance.new("TextButton")
+    local BlackScreen = Instance.new("TextButton")
     BlackScreen.Name = "BlackScreenFrame"
     BlackScreen.Size = UDim2.new(1, 0, 1, 0)
     BlackScreen.BackgroundColor3 = Color3.new(0, 0, 0) 
